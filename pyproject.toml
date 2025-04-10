@@ -5,26 +5,37 @@ build-backend = "hatchling.build"
 [project]
 name = "git-gen"
 dynamic = ["version"]
-description = ''
 readme = "README.md"
-requires-python = ">=3.8"
 license = "MIT"
-keywords = []
 authors = [
-  { name = "CyrusCKF", email = "97295877+CyrusCKF@users.noreply.github.com" },
+  { name = "Cheung Ka Fai", email = "cyrus.cheungkf@gmail.com" },
+  { email = "m19990328@gmail.com" },
 ]
+description = 'Generate git commit message using fine-tuned LLM'
+keywords = ["git", "LLM"]
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries",
 ]
-dependencies = []
+requires-python = ">=3.10"
+dependencies = [
+  "rich>=14.0.0",
+  "torch>=2.6.0",
+  "transformers>=4.51.1",
+  "click>=8.1.8",
+]
 
 [project.urls]
 Documentation = "https://github.com/CyrusCKF/git-gen#readme"
@@ -35,9 +46,7 @@ Source = "https://github.com/CyrusCKF/git-gen"
 path = "src/git_gen/__about__.py"
 
 [tool.hatch.envs.types]
-extra-dependencies = [
-  "mypy>=1.0.0",
-]
+extra-dependencies = ["mypy>=1.0.0"]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/git_gen tests}"
 
@@ -45,17 +54,14 @@ check = "mypy --install-types --non-interactive {args:src/git_gen tests}"
 source_pkgs = ["git_gen", "tests"]
 branch = true
 parallel = true
-omit = [
-  "src/git_gen/__about__.py",
-]
+omit = ["src/git_gen/__about__.py"]
 
 [tool.coverage.paths]
 git_gen = ["src/git_gen", "*/git-gen/src/git_gen"]
 tests = ["tests", "*/git-gen/tests"]
 
 [tool.coverage.report]
-exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
-]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
+
+[project.scripts]
+greet = "git_gen.cli:app"
