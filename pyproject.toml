@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "git-gen"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "CyrusCKF", email = "97295877+CyrusCKF@users.noreply.github.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/CyrusCKF/git-gen#readme"
+Issues = "https://github.com/CyrusCKF/git-gen/issues"
+Source = "https://github.com/CyrusCKF/git-gen"
+
+[tool.hatch.version]
+path = "src/git_gen/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/git_gen tests}"
+
+[tool.coverage.run]
+source_pkgs = ["git_gen", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/git_gen/__about__.py",
+]
+
+[tool.coverage.paths]
+git_gen = ["src/git_gen", "*/git-gen/src/git_gen"]
+tests = ["tests", "*/git-gen/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
