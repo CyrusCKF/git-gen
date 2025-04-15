@@ -1,22 +1,23 @@
-from queue import Queue
+import logging
 import subprocess
+from pathlib import Path
+from queue import Queue
 from threading import Thread
 
 import torch
+from rich.console import Console
+from transformers.generation.configuration_utils import GenerationConfig
+from transformers.generation.streamers import (BaseStreamer,
+                                               TextIteratorStreamer,
+                                               TextStreamer)
 from transformers.models.auto.modeling_auto import AutoModelForCausalLM
 from transformers.models.auto.tokenization_auto import AutoTokenizer
 from transformers.models.qwen2.modeling_qwen2 import Qwen2ForCausalLM
-from transformers.pipelines import pipeline
-from transformers.pipelines.text_generation import TextGenerationPipeline
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 from transformers.utils.quantization_config import BitsAndBytesConfig
-from transformers.generation.streamers import (
-    TextStreamer,
-    TextIteratorStreamer,
-    BaseStreamer,
-)
 
-from transformers.generation.configuration_utils import GenerationConfig
+console = Console()
+logger = logging.getLogger(__name__)
 
 instruction = """You are Git Commit Message Pro, a specialist in crafting precise, professional Git commit messages from .diff files. Your role is to analyze these files, interpret the changes, and generate a clear, direct commit message.
 
@@ -28,6 +29,8 @@ Guidelines:
 
 
 class OutputStream(BaseStreamer):
+    """Stream the raw generation output"""
+
     STOP_SIGNAL = None
 
     def __init__(self) -> None:
@@ -58,24 +61,37 @@ class OutputStream(BaseStreamer):
             return value
 
 
-def generate_commit():
+def generate_commit(
+    model_size: str | None = None,
+    quantized_model: bool | None = None,
+    device: torch.device | str | None = None,
+    project_folder: Path | str | None = None,
+    num_sequences: int | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+):
+    """
+    Args:
+        project_folder: Path to the project. It should contain a '.git' folder
+    """
     tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
         "Qwen/Qwen2.5-Coder-7B-Instruct"
     )
     if torch.cuda.is_available():
-        print("CUDA detected. Using quantized model")
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16
-        )
+        logger.info("CUDA detected. Using quantized model")
+        # quantization_config = BitsAndBytesConfig(
+        #     load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16
+        # )
         model: Qwen2ForCausalLM = AutoModelForCausalLM.from_pretrained(
             "CyrusCheungkf/git-commit-7B-q4b",
-            quantization_config=quantization_config,
+            low_cpu_mem_usage=True,
         )
     else:
-        print("CUDA not detected. Using a weaker model")
+        logger.info("CUDA not detected. Using a weaker model")
         model: Qwen2ForCausalLM = AutoModelForCausalLM.from_pretrained(
-            "CyrusCheungkf/git-commit-1.5B"
+            "CyrusCheungkf/git-commit-1.5B",
         )
+    console.log("Hello from", console, "!")
 
     result = subprocess.run(["git", "diff"], capture_output=True, text=True)
     result.check_returncode()
@@ -85,15 +101,18 @@ def generate_commit():
     ]
 
     tokens = tokenizer.apply_chat_template(
-        conversation, add_generation_prompt=True, return_tensors="pt"
+        conversation, add_generation_prompt=True, return_tensors="pt", return_dict=True
     )
+    torch.tensor([1]).to("cuda")
+    tokens = tokens.to(model.device)
     streamer = OutputStream()
     generation_kwargs = dict(
-        inputs=tokens,
+        inputs=tokens["input_ids"],
+        attention_mask=tokens["attention_mask"],
         streamer=streamer,
-        num_return_sequences=4,
         pad_token_id=tokenizer.eos_token_id,
         max_length=2048,
+        num_return_sequences=4,
         # temperature=0.1,
         # top_p=0.8,
         # repetition_penalty=1.25,
