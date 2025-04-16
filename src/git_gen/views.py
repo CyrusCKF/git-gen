@@ -27,14 +27,18 @@ class LinesStreamer:
             self.lines[i] = self.lines[i] + t
         self.render()
 
-    def render(self):
+    def build_renderable(self):
         main_table = Table.grid()
         main_table.add_row(self.title)
-        table = Table.grid(padding=(1, 4), pad_edge=True)
+        table = Table.grid(padding=(0, 4), pad_edge=True)
         for i, m in enumerate(self.lines):
             table.add_row(f"[i]{i}[/i]. {m}")
         main_table.add_row(table)
-        self.status.update(main_table)
+        return main_table
+
+    def render(self):
+        widget = self.build_renderable()
+        self.status.update(widget)
 
 
 @contextmanager
@@ -42,9 +46,10 @@ def stream_lines(console: Console, title: str):
     """Print multiple lines on console word by word"""
     status = console.status("")
     status.start()
+    line_streamer = LinesStreamer(status, title)
     try:
-        line_streamer = LinesStreamer(status, title)
         line_streamer.render()
         yield line_streamer
     finally:
+        console.print(line_streamer.build_renderable())
         status.stop()

@@ -1,5 +1,4 @@
 import logging
-import pprint
 import subprocess
 from pathlib import Path
 
@@ -69,6 +68,7 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--max_new_tokens",
     type=click.IntRange(min=1),
+    default=1024,
     help="The maximum numbers of tokens to generate.",
 )
 @click.option(
@@ -117,16 +117,19 @@ def app(
     generate_kwargs = prompt_kwargs | kwargs
     token_generator = stream_generation(model, generate_kwargs)
 
+    # Stream outputs to console
     title = "Generating messages (This may take a while if you are using cpu or your memory is low)"
+    special_tokens = (tokenizer.pad_token, tokenizer.eos_token)
     with stream_lines(console, title) as line_streamer:
         for tokens in token_generator:
             words = [tokenizer.decode(t) for t in tokens]
+            words = [w if w not in special_tokens else "" for w in words]
             line_streamer.append(words)
         lines = line_streamer.lines
-    click.echo(lines)
 
+    # Ask for user input to commit
     table = Table.grid()
-    table.add_row("Which message would you to commit?")
+    table.add_row("Which message would you like to commit?")
     table.add_row("Type 1/2/... to select the message, q to exit", style="#696969")
     console.print(Panel(table, expand=False))
     user_input = console.input(">>")
@@ -139,7 +142,7 @@ def app(
             _git_commit_all(project_folder, lines[idx])
             console.log("Git committed successfully")
         except:
-            logger.warning("Invalid input")
+            logger.error("Invalid input")
 
 
 def _get_git_diff(folder: Path):

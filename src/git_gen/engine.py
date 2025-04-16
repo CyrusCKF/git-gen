@@ -1,22 +1,18 @@
 """Contains helper functions to use the model"""
 
 import logging
-import subprocess
-from pathlib import Path
-from pprint import pprint
 from queue import Queue
 from threading import Thread
 from typing import Iterable
 
 import torch
-from rich.console import Console
-from transformers.generation.utils import GenerationMixin
 from transformers.generation.streamers import BaseStreamer
+from transformers.generation.utils import GenerationMixin
+from transformers.modeling_utils import PreTrainedModel
 from transformers.models.auto.modeling_auto import AutoModelForCausalLM
 from transformers.models.auto.tokenization_auto import AutoTokenizer
-from transformers.models.qwen2.modeling_qwen2 import Qwen2ForCausalLM
-from transformers.modeling_utils import PreTrainedModel
-from transformers.tokenization_utils_base import PreTrainedTokenizerBase, BatchEncoding
+from transformers.tokenization_utils_base import (BatchEncoding,
+                                                  PreTrainedTokenizerBase)
 
 logger = logging.getLogger(__name__)
 
@@ -68,14 +64,15 @@ def load_model_and_tokenizer(
 ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
     """Return a tuple of (model, tokenizer)"""
     model_id = MODEL_SIZE_QUANT_TO_IDS[(model_size, quantize_model)]
+    # model_id = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
     logging.info(f"Loading model {model_id}")
     model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
-        model_id, low_cpu_mem_usage=quantize_model, device_map=device
+        model_id, low_cpu_mem_usage=True, device_map=device
     )
     assert isinstance(model, PreTrainedModel)
 
     # only use fine-tuned qwen2.5 model
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-Coder-7B-Instruct")
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-Coder-1.5B-Instruct")
     assert isinstance(tokenizer, PreTrainedTokenizerBase)
     return model, tokenizer
 
@@ -86,7 +83,8 @@ Guidelines:
 1. Be specific about the type of change (e.g., "Rename variable X to Y", "Extract method Z from class W").
 2. Prefer to write it on why and how instead of what changed.
 3. Interpret the changes; do not transcribe the diff.
-4. If you cannot read the entire file, attempt to generate a message based on the available information."""
+4. If you cannot read the entire file, attempt to generate a message based on the available information.
+5. Be concise and summarize the most important changes. Keep your response in 1 sentence."""
 
 
 def make_prompt(input: str) -> list[dict[str, str]]:
@@ -111,7 +109,6 @@ def make_generate_args(
     return {
         "inputs": tokens["input_ids"],
         "attention_mask": tokens["attention_mask"],
-        "pad_token_id": tokenizer.eos_token_id,
     }
 
 
