@@ -147,7 +147,9 @@ class OutputStream(BaseStreamer):
             return value
 
 
-def stream_generation(model: GenerationMixin, generate_kwargs: dict) -> Iterable[int]:
+def stream_generation(
+    model: GenerationMixin, generate_kwargs: dict
+) -> Iterable[list[int]]:
     """Return generator of token ids one at a time.
 
     Args:

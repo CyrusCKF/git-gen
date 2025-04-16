@@ -1,11 +1,15 @@
 import logging
 import pprint
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 import click
+from rich.console import Console
 from rich.logging import RichHandler
+from rich.panel import Panel
+from rich.table import Table
 from transformers.generation.configuration_utils import GenerationConfig
+
 from git_gen.engine import (
     load_model_and_tokenizer,
     make_generate_args,
@@ -13,7 +17,7 @@ from git_gen.engine import (
     resolve_model_options,
     stream_generation,
 )
-from rich.console import Console
+from git_gen.views import stream_lines
 
 logging.basicConfig(
     level=logging.INFO, format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
@@ -112,14 +116,43 @@ def app(
         console.log("Generating with params:", final_gen_params)
     generate_kwargs = prompt_kwargs | kwargs
     token_generator = stream_generation(model, generate_kwargs)
-    for tokens in token_generator:
-        click.echo(tokens)
+
+    title = "Generating messages (This may take a while if you are using cpu or your memory is low)"
+    with stream_lines(console, title) as line_streamer:
+        for tokens in token_generator:
+            words = [tokenizer.decode(t) for t in tokens]
+            line_streamer.append(words)
+        lines = line_streamer.lines
+    click.echo(lines)
+
+    table = Table.grid()
+    table.add_row("Which message would you to commit?")
+    table.add_row("Type 1/2/... to select the message, q to exit", style="#696969")
+    console.print(Panel(table, expand=False))
+    user_input = console.input(">>")
+
+    if user_input == "q":
+        console.log("Bye bye")
+    else:
+        try:
+            idx = int(user_input)
+            _git_commit_all(project_folder, lines[idx])
+            console.log("Git committed successfully")
+        except:
+            logger.warning("Invalid input")
 
 
 def _get_git_diff(folder: Path):
-    result = subprocess.run(["git", "diff"], capture_output=True, text=True, cwd=folder)
+    result = subprocess.run(
+        ["git", "diff", "HEAD"], capture_output=True, text=True, cwd=folder
+    )
     result.check_returncode()
     return result.stdout
+
+
+def _git_commit_all(folder: Path, message: str):
+    subprocess.run(["git", "add", "-A", message], cwd=folder)
+    subprocess.run(["git", "commit", "-m", message], cwd=folder)
 
 
 def _get_final_gen_params(from_model: GenerationConfig, from_inputs: dict):
