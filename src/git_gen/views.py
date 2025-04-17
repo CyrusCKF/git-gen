@@ -28,11 +28,11 @@ class LinesStreamer:
         self.render()
 
     def build_renderable(self):
-        main_table = Table.grid()
+        main_table = Table.grid(padding=(1, 0))
         main_table.add_row(self.title)
         table = Table.grid(padding=(0, 4), pad_edge=True)
         for i, m in enumerate(self.lines):
-            table.add_row(f"[i]{i}[/i]. {m}")
+            table.add_row(m)
         main_table.add_row(table)
         return main_table
 
@@ -51,5 +51,4 @@ def stream_lines(console: Console, title: str):
         line_streamer.render()
         yield line_streamer
     finally:
-        console.print(line_streamer.build_renderable())
         status.stop()

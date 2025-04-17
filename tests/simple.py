@@ -1,19 +1,27 @@
 import subprocess
 from pathlib import Path
+from pprint import pprint
 
-from git_gen.engine import (load_model_and_tokenizer, make_generate_args,
-                            make_prompt, resolve_model_options)
+from git_gen.engine import load_model, make_prompt
 
 
 def main():
-    size, quantize = resolve_model_options(None, None)
-    model, tokenizer = load_model_and_tokenizer(size, quantize, "auto")
+    model = load_model()
     git_diff = _get_git_diff(Path("."))
     conversation = make_prompt(git_diff)
-    prompt_kwargs = make_generate_args(conversation, tokenizer, model.device)
-
-    results = model.generate(**prompt_kwargs, max_new_tokens=1024)
-    print(tokenizer.decode(results[0]))
+    print("Model inputs:")
+    for message in conversation:
+        print(message["role"].upper(), message.get("content"))
+    chat_completer = model.create_chat_completion(conversation, stream=True)
+    print("=" * 10)
+    print("Model outputs:")
+    for output in chat_completer:
+        try:
+            text = output["choices"][0]["delta"]["content"]  # type: ignore
+        except:
+            text = None
+        if text is not None:
+            print(text, end="", flush=True)
 
 
 def _get_git_diff(folder: Path):
