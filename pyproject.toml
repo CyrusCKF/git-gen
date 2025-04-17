@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "git-gen"
+name = "git-gen-utils"
 dynamic = ["version"]
 readme = "README.md"
 license = "MIT"
@@ -50,6 +50,9 @@ extra-dependencies = ["mypy>=1.0.0"]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/git_gen tests}"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/git_gen"]
+
 [tool.coverage.run]
 source_pkgs = ["git_gen", "tests"]
 branch = true
@@ -64,4 +67,4 @@ tests = ["tests", "*/git-gen/tests"]
 exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
 
 [project.scripts]
-greet = "git_gen.cli:app"
+git-gen = "git_gen.app:app"

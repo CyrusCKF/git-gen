@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 def load_model() -> Llama:
     """Return the pretrained gguf model"""
-    model_id = "CyrusCheungkf/git-commit-7B"
-    logging.info(f"Loading model {model_id}")
+    model_id = "CyrusCheungkf/git-commit-3B"
+    logging.info(f"Loading model {model_id} on https://huggingface.co/{model_id}")
     model = Llama.from_pretrained(
         repo_id=model_id, filename="*.gguf", verbose=False, n_ctx=32768
     )
