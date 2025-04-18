@@ -42,6 +42,15 @@ Documentation = "https://github.com/CyrusCKF/git-gen#readme"
 Issues = "https://github.com/CyrusCKF/git-gen/issues"
 Source = "https://github.com/CyrusCKF/git-gen"
 
+[project.optional-dependencies]
+finetune = [
+  "jupyter>=1.1.1",
+  "datasets>=3.3.2",
+  "transformers>=4.49.0",
+  "accelerate>=1.5.2",
+  "python-dotenv>=1.0.1",
+]
+
 [tool.hatch.version]
 path = "src/git_gen/__about__.py"
 

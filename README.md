@@ -8,6 +8,7 @@ Generate git commit message with a local LLM, which has been fine-tuned on 300K 
 ## Example
 
 Original code in file `djangocms_blog/admin.py`:
+
 ```python
 class PostAdmin(PlaceholderAdminMixin, FrontendEditableAdminMixin,
   ...
@@ -21,6 +22,7 @@ class PostAdmin(PlaceholderAdminMixin, FrontendEditableAdminMixin,
 ```
 
 Changed code:
+
 ```python
 class PostAdmin(PlaceholderAdminMixin, FrontendEditableAdminMixin,
   ...
