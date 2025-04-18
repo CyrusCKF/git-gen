@@ -3,7 +3,40 @@
 <!-- [![PyPI - Version](https://img.shields.io/pypi/v/git-gen.svg)](https://pypi.org/project/git-gen)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/git-gen.svg)](https://pypi.org/project/git-gen) -->
 
-Generate git commit message with a local LLM, which has been fine-tuned on 300K high-quality Python commits and is able to analyze the purposes of the changes
+Generate git commit message with a local LLM, which has been fine-tuned on 300K high-quality Python commits and is able to summarize the idea behind the changes
+
+## Example
+
+Original code in file `djangocms_blog/admin.py`:
+```python
+class PostAdmin(PlaceholderAdminMixin, FrontendEditableAdminMixin,
+  ...
+                ).difference(removed).union(form_sites)
+                form.cleaned_data['sites'] = diff_original
+            else:
+                form.cleaned_data['sites'] = self.get_restricted_sites(request).all()
+        super(PostAdmin, self).save_related(request, form, formsets, change)
+ 
+    class Media:
+```
+
+Changed code:
+```python
+class PostAdmin(PlaceholderAdminMixin, FrontendEditableAdminMixin,
+  ...
+                ).difference(removed).union(form_sites)
+                form.cleaned_data['sites'] = diff_original
+            else:
+                form.instance.sites.add(
+                    *self.get_restricted_sites(request).all().values_list('pk', flat=True)
+                )
+        super(PostAdmin, self).save_related(request, form, formsets, change)
+
+    class Media:
+```
+
+Actual message: Better strategy to updates sites m2m  
+Generated message: Add site selection functionality for blog posts  
 
 ## Installation
 
